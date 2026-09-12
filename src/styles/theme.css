@@ -1,0 +1,226 @@
+/*
+ * Tailwind v4 theme: maps semantic tokens (styles/tokens.css) to utilities.
+ * The default palette, radii, shadows and type scale are removed so off-system values
+ * cannot compile: `bg-gray-500` produces nothing, `bg-surface` works.
+ * Adding a token here? Add it to src/lib/cn.ts as well (tailwind-merge).
+ */
+
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-*: initial;
+
+  /* Font roles (families come from fonts.css via --font-family-* in tokens.css). */
+  --font-sans: var(--font-family-ui);
+  --font-display: var(--font-family-display);
+  --font-mono: var(--font-family-mono);
+
+  /* Fixed rem type scale for product UI (ratio ≈ 1.125–1.2). */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.125rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 2.5rem;
+  --text-5xl--line-height: 3rem;
+  --text-6xl: 3rem;
+  --text-6xl--line-height: 3.5rem;
+
+  /* Named spacing: h-topbar, w-sidebar, pb-tabbar, h-control-md … */
+  --spacing-header: 4rem;
+  --spacing-topbar: 3.5rem;
+  --spacing-sidebar: 16rem;
+  --spacing-rail: 4.5rem;
+  --spacing-tabbar: 4rem;
+  --spacing-control-sm: 2rem;
+  --spacing-control-md: 2.5rem;
+  --spacing-control-lg: 2.75rem;
+
+  /* Content widths: max-w-shop, max-w-dash, max-w-form, max-w-prose */
+  --container-form: 40rem;
+  --container-prose: 42rem;
+  --container-shop: 88rem;
+  --container-dash: 100rem;
+
+  --aspect-product: 4 / 5;
+  --aspect-portrait: 3 / 4;
+  --aspect-landscape: 4 / 3;
+  --aspect-wide: 16 / 9;
+  --aspect-banner: 21 / 9;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Enter/exit animations for Radix `data-state` (exits must be animations, not
+     transitions, so Presence waits for animationend before unmounting). */
+  --animate-fade-in: fade-in 150ms var(--ease-enter);
+  --animate-fade-out: fade-out 120ms var(--ease-exit);
+  --animate-pop-in: pop-in 160ms var(--ease-enter);
+  --animate-pop-out: pop-out 120ms var(--ease-exit);
+  --animate-sheet-in-right: sheet-in-right 280ms var(--ease-enter);
+  --animate-sheet-out-right: sheet-out-right 200ms var(--ease-exit);
+  --animate-sheet-in-left: sheet-in-left 280ms var(--ease-enter);
+  --animate-sheet-out-left: sheet-out-left 200ms var(--ease-exit);
+  --animate-sheet-in-bottom: sheet-in-bottom 280ms var(--ease-enter);
+  --animate-sheet-out-bottom: sheet-out-bottom 200ms var(--ease-exit);
+  --animate-accordion-down: accordion-down 200ms var(--ease-standard);
+  --animate-accordion-up: accordion-up 200ms var(--ease-standard);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-spin: spin 0.8s linear infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pop-in { from { opacity: 0; transform: scale(0.97) translateY(2px); } to { opacity: 1; transform: none; } }
+  @keyframes pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(0.97); } }
+  @keyframes sheet-in-right { from { transform: translateX(100%); } to { transform: none; } }
+  @keyframes sheet-out-right { from { transform: none; } to { transform: translateX(100%); } }
+  @keyframes sheet-in-left { from { transform: translateX(-100%); } to { transform: none; } }
+  @keyframes sheet-out-left { from { transform: none; } to { transform: translateX(-100%); } }
+  @keyframes sheet-in-bottom { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes sheet-out-bottom { from { transform: none; } to { transform: translateY(100%); } }
+  @keyframes accordion-down { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
+  @keyframes accordion-up { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+}
+
+/* `inline` makes utilities emit var(--token) directly, so theme and portal overrides
+   resolve at the element. */
+@theme inline {
+  /* Surfaces */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-overlay: var(--overlay);
+  --color-header: var(--header);
+  --color-header-fg: var(--header-fg);
+
+  /* Sidebar (dashboard portals) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-fg: var(--sidebar-fg);
+  --color-sidebar-fg-muted: var(--sidebar-fg-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-fg: var(--sidebar-active-fg);
+  --color-sidebar-border: var(--sidebar-border);
+
+  /* Text */
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-inverse: var(--fg-inverse);
+  --color-on-media: var(--on-media);
+  --color-link: var(--link);
+
+  /* Lines */
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-fg: var(--primary-subtle-fg);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-fg: var(--accent-subtle-fg);
+  --color-highlight: var(--highlight);
+  --color-highlight-fg: var(--highlight-fg);
+
+  /* Status tones */
+  --color-neutral: var(--neutral);
+  --color-neutral-fg: var(--neutral-fg);
+  --color-neutral-subtle: var(--neutral-subtle);
+  --color-neutral-subtle-fg: var(--neutral-subtle-fg);
+  --color-neutral-border: var(--neutral-border);
+  --color-info: var(--info);
+  --color-info-fg: var(--info-fg);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-subtle-fg: var(--info-subtle-fg);
+  --color-info-border: var(--info-border);
+  --color-success: var(--success);
+  --color-success-fg: var(--success-fg);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-subtle-fg: var(--success-subtle-fg);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-subtle-fg: var(--warning-subtle-fg);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-subtle-fg: var(--danger-subtle-fg);
+  --color-danger-border: var(--danger-border);
+
+  /* Commerce */
+  --color-price: var(--price);
+  --color-mrp: var(--mrp);
+  --color-discount: var(--discount);
+  --color-rating: var(--rating);
+  --color-rating-chip: var(--rating-chip);
+  --color-rating-chip-fg: var(--rating-chip-fg);
+  --color-deal: var(--deal);
+  --color-deal-fg: var(--deal-fg);
+
+  /* Data viz */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
+
+  /* Misc */
+  --color-skeleton: var(--skeleton);
+  --color-skeleton-shine: var(--skeleton-shine);
+  --color-selection: var(--selection);
+
+  /* Role radii */
+  --radius-control: var(--r-control);
+  --radius-card: var(--r-card);
+  --radius-popover: var(--r-popover);
+  --radius-dialog: var(--r-dialog);
+  --radius-badge: var(--r-badge);
+  --radius-thumb: var(--r-thumb);
+  --radius-pill: 9999px;
+
+  /* Elevation */
+  --shadow-card: var(--elev-card);
+  --shadow-raised: var(--elev-raised);
+  --shadow-popover: var(--elev-popover);
+  --shadow-modal: var(--elev-modal);
+}
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));

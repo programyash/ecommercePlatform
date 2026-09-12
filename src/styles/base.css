@@ -1,0 +1,76 @@
+@layer base {
+  /* Tailwind 4 defaults borders to currentColor; the system uses its own line colour. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-weight: var(--weight-body, 400);
+    font-feature-settings: var(--font-features-ui, normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tailwind 4 resets button cursors to default. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+
+  ::placeholder {
+    color: var(--fg-subtle);
+    opacity: 1;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /*
+   * A link sitting inside running text must be distinguishable without colour
+   * (WCAG 1.4.1), so it carries an underline at rest. Links that are their own
+   * block — nav items, cards, buttons-as-links — are not inside a paragraph and
+   * keep whatever decoration their component gives them.
+   */
+  p a[href] {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Numbers line up in every table and price. */
+  table,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* One-frame guard so a theme switch flips the page at once instead of animating. */
+  [data-theme-switching] *,
+  [data-theme-switching] *::before,
+  [data-theme-switching] *::after {
+    transition: none !important;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}

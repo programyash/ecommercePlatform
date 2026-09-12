@@ -1,0 +1,145 @@
+/*
+ * Type roles. Components use these instead of raw size/weight utilities so the
+ * hierarchy stays identical across all three portals.
+ */
+
+@utility type-display {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  line-height: var(--text-4xl--line-height);
+  font-weight: var(--weight-display, 700);
+  letter-spacing: var(--tracking-display, -0.02em);
+  font-stretch: var(--stretch-display, 100%);
+  @media (width >= 64rem) {
+    font-size: var(--text-6xl);
+    line-height: var(--text-6xl--line-height);
+  }
+}
+
+@utility type-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: var(--weight-heading, 650);
+  letter-spacing: var(--tracking-heading, -0.01em);
+  @media (width >= 48rem) {
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+  }
+}
+
+@utility type-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: var(--weight-heading, 650);
+  letter-spacing: var(--tracking-heading, -0.01em);
+}
+
+@utility type-h3 {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: var(--weight-title, 600);
+}
+
+@utility type-title {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: var(--weight-title, 600);
+}
+
+@utility type-body {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: var(--weight-body, 400);
+}
+
+@utility type-body-lg {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: var(--weight-body, 400);
+}
+
+@utility type-label {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: var(--weight-label, 550);
+}
+
+@utility type-caption {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: var(--weight-body, 400);
+}
+
+@utility type-overline {
+  font-family: var(--font-label, var(--font-sans));
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  font-weight: 600;
+  letter-spacing: var(--tracking-overline, 0.08em);
+  text-transform: uppercase;
+  font-stretch: var(--stretch-label, 100%);
+}
+
+@utility type-kpi {
+  font-family: var(--font-numeric, var(--font-sans));
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: var(--weight-heading, 650);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  @media (width >= 64rem) {
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+  }
+}
+
+@utility type-price {
+  font-family: var(--font-numeric, var(--font-sans));
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-heading, 650);
+  letter-spacing: -0.005em;
+}
+
+@utility type-code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Layout helpers */
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility skeleton-shimmer {
+  background-color: var(--skeleton);
+  background-image: linear-gradient(90deg, transparent 0%, var(--skeleton-shine) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@utility focus-ring {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
