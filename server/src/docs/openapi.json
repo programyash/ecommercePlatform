@@ -1,0 +1,273 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Chowk Multi-Vendor E-Commerce Platform API",
+    "description": "Production REST API for Chowk marketplace platform supporting Customer, Seller, and Admin roles with multi-vendor split orders, real-time WebSocket events, inventory control, and financial settlement ledgers.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Chowk Platform Team",
+      "email": "support@chowk.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "type": "object" },
+          "error": { "type": "object", "nullable": true }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password", "role", "name"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "role": { "type": "string", "enum": ["CUSTOMER", "SELLER", "ADMIN"] },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "CheckoutRequest": {
+        "type": "object",
+        "required": ["addressId", "paymentMethod"],
+        "properties": {
+          "addressId": { "type": "string", "format": "uuid" },
+          "paymentMethod": { "type": "string", "enum": ["upi", "card", "emi", "netbanking", "wallet", "cod"] },
+          "couponCode": { "type": "string" },
+          "upiVpa": { "type": "string" },
+          "cardLast4": { "type": "string" },
+          "deliverySpeed": { "type": "string", "enum": ["standard", "express"] },
+          "gstInvoice": { "type": "boolean" }
+        }
+      },
+      "ShipmentStatusUpdate": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["PROCESSING", "PACKED", "READY_FOR_PICKUP", "PICKED_UP", "IN_TRANSIT", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]
+          },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "security": [],
+        "responses": {
+          "200": { "description": "Server is running healthy" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user account",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "Account registered successfully" },
+          "400": { "description": "Validation or duplicate email error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user and issue JWT",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Authenticated successfully" },
+          "401": { "description": "Invalid email or password" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "responses": {
+          "200": { "description": "Current profile details" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Browse catalog with pagination, search, and category filters",
+        "security": [],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["featured", "price_asc", "price_desc", "rating", "newest"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of products and pagination metadata" }
+        }
+      },
+      "post": {
+        "summary": "Create new product (Seller or Admin only)",
+        "responses": {
+          "201": { "description": "Product created in DRAFT or PENDING_REVIEW state" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/products/{slug}": {
+      "get": {
+        "summary": "Fetch product details by slug or ID",
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Full product details, seller info, and variants" },
+          "404": { "description": "Product not found" }
+        }
+      }
+    },
+    "/customers/cart": {
+      "get": {
+        "summary": "Get customer active cart with live prices and stock validation",
+        "responses": {
+          "200": { "description": "Cart items, grouped by vendor with tax and shipping calculations" }
+        }
+      },
+      "post": {
+        "summary": "Add or update variant quantity in cart",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["variantId", "quantity"], "properties": { "variantId": { "type": "string" }, "quantity": { "type": "integer" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Item added to cart" },
+          "400": { "description": "Insufficient inventory or invalid quantity" }
+        }
+      }
+    },
+    "/orders/checkout": {
+      "post": {
+        "summary": "Execute multi-vendor checkout and lock inventory atomically",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Order placed successfully, sub-orders split per seller" },
+          "400": { "description": "Out of stock or invalid payment info" }
+        }
+      }
+    },
+    "/sellers/orders": {
+      "get": {
+        "summary": "Get orders and shipments assigned to the authenticated seller",
+        "responses": {
+          "200": { "description": "List of seller-specific sub-orders and shipments" },
+          "403": { "description": "Forbidden for non-sellers" }
+        }
+      }
+    },
+    "/sellers/orders/{shipmentId}/status": {
+      "patch": {
+        "summary": "Update shipment status (isolated to seller's own shipment)",
+        "parameters": [
+          { "name": "shipmentId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShipmentStatusUpdate" } } }
+        },
+        "responses": {
+          "200": { "description": "Shipment status updated and real-time event broadcasted" },
+          "403": { "description": "Not authorized to update another seller's shipment" }
+        }
+      }
+    },
+    "/sellers/finance/sales": {
+      "get": {
+        "summary": "Get seller financial sales dashboard and analytics",
+        "responses": {
+          "200": { "description": "Net GMV, orders, units, and category breakdowns" }
+        }
+      }
+    },
+    "/sellers/finance/payouts": {
+      "get": {
+        "summary": "Get seller payout settlement history and scheduled transfers",
+        "responses": {
+          "200": { "description": "Settlement batches, net earnings after commission & TDS" }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "summary": "Get marketplace-wide analytics and admin attention queues",
+        "responses": {
+          "200": { "description": "Aggregated metrics, pending KYC, pending moderation, GMV" },
+          "403": { "description": "Admin access required" }
+        }
+      }
+    },
+    "/admin/sellers": {
+      "get": {
+        "summary": "List all registered marketplace sellers with KYC status",
+        "responses": { "200": { "description": "Sellers list" } }
+      }
+    },
+    "/admin/sellers/{id}/kyc": {
+      "patch": {
+        "summary": "Review seller KYC (approve or reject with reason)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["status"], "properties": { "status": { "type": "string", "enum": ["APPROVED", "REJECTED"] }, "rejectionReason": { "type": "string" } } } } }
+        },
+        "responses": { "200": { "description": "KYC status updated" } }
+      }
+    }
+  }
+}

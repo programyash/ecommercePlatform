@@ -1,83 +1,157 @@
-# Chowk — multi-vendor marketplace UI/UX sample
+# Chowk — Multi-Vendor E-Commerce Platform
 
-A frontend-only design sample of an Indian e-commerce marketplace, built as **one app with three portals**:
+A production-grade, full-stack multi-vendor e-commerce platform built for the Indian retail ecosystem, powered by **PostgreSQL**, **Prisma ORM**, **Express & TypeScript**, **Socket.IO**, and a modern **React 19** frontend.
 
-| Portal | Path | Who it's for |
-|---|---|---|
-| **Chowk** storefront | `/` | Shoppers — browse, compare, check delivery by PIN, pay, track, return |
-| **Chowk Seller Hub** | `/seller` | Sellers — listings, inventory, orders, payouts, reviews |
-| **Chowk Admin** | `/admin` | Marketplace staff — approvals, moderation, orders, finance, reports |
+---
 
-There is **no backend**. Everything runs in the browser against a seeded mock database that persists to `localStorage`, so a change made in one portal shows up in the others — including in a second browser tab.
+## 🏛 System Architecture & Stack
 
-`Chowk` is a fictional brand (a *chowk* is the market crossing at the centre of an Indian town). Every product, seller, shopper, order, GSTIN, PAN, IFSC code and phone number in here is synthetic.
+```text
+┌────────────────────────────────────────────────────────┐
+│               Chowk Frontend (React 19)                │
+│    Storefront (/)  │  Seller Hub (/seller)  │  Admin   │
+└───────────────────────────┬────────────────────────────┘
+                            │ REST APIs & WebSockets
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│           Express & TypeScript API Gateway             │
+│   • Helmet / CORS / In-Memory Rate Limiting            │
+│   • JWT Auth & Role-Based Access Control (RBAC)        │
+│   • Zod Schema Request Validation & Error Handling     │
+│   • Socket.IO Real-Time Order Event Broadcasting       │
+└───────────────────────────┬────────────────────────────┘
+                            │ Prisma ORM
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│          PostgreSQL Relational Database Engine         │
+│   • Users, Customers, Sellers, KYC & Verification      │
+│   • Catalog: Categories, Products & Multi-Variants     │
+│   • Atomic Multi-Vendor Split Orders & Shipments       │
+│   • Financial Ledger, Payouts, Commissions & Reports   │
+└────────────────────────────────────────────────────────┘
+```
 
-## Run it
+### Technologies Used
+
+| Layer | Stack |
+|---|---|
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Radix UI Primitives, Lucide Icons, Recharts, Zustand, Sonner |
+| **Backend** | Node.js, Express, TypeScript, Socket.IO, Helmet, In-Memory Sliding Window Rate Limiter |
+| **ORM & Database** | Prisma ORM, PostgreSQL (ACID transactions, relational constraints) |
+| **Validation & Security** | Zod schemas, BCrypt hashing, JWT with role & tenant entity claims |
+| **Testing** | Jest, Supertest, ts-jest (8 test suites, 51 integration & state-machine tests) |
+| **API Documentation** | OpenAPI 3.0 Specification (`server/src/docs/openapi.json`) |
+
+---
+
+## 📦 Core Platform Capabilities
+
+### 1. Multi-Vendor Order Splitting & Inventory Management
+* **Single Customer Checkout**: Shoppers add items from multiple distinct sellers to one cart.
+* **Atomic Split Orders**: One checkout creates a parent `Order` and automatically generates separate `Shipment` sub-orders for each participating seller.
+* **Concurrency-Safe Stock Deduction**: Inventory is validated and decremented atomically within a database transaction; rollback occurs if stock is insufficient.
+
+### 2. Strict Shipment State Machine
+* **Lifecycle Flow**: `PLACED` $\to$ `CONFIRMED` $\to$ `PACKED` $\to$ `READY_FOR_PICKUP` $\to$ `PICKED_UP` $\to$ `IN_TRANSIT` $\to$ `SHIPPED` $\to$ `OUT_FOR_DELIVERY` $\to$ `DELIVERED`.
+* **State Protection**: Arbitrary status jumps (e.g. `CONFIRMED` $\to$ `DELIVERED`) and backward progressions are strictly rejected with `400 Bad Request`.
+* **Seller Isolation**: Sellers can only view and mutate their own shipments; unauthorized cross-vendor mutation attempts return `404 Not Found`.
+
+### 3. Real-Time Order Updates via Socket.IO
+* **Bidirectional Events**: Real-time events (`order:updated`, `shipment:status_changed`) broadcast status transitions instantly to customer tracking and admin monitoring dashboards.
+* **Graceful Fallback**: The PostgreSQL database remains the single source of truth; if the WebSocket disconnects, all data is retrieved seamlessly via standard REST endpoints.
+
+### 4. Authoritative Financial System & Ledger
+* **Server-Side Computations**: All subtotals, GST taxes, delivery fees, COD limits, platform commissions, and seller net earnings are calculated exclusively on the backend.
+* **Seller & Admin Ledgers**: Tracks platform revenues, seller earnings, TDS/TCS deductions, and settlement payout batches with hold/release mechanisms.
+
+### 5. Seller Onboarding, KYC & Product Moderation
+* **KYC Pipeline**: Document verification workflow with admin approve/reject actions and recorded audit trails.
+* **Product Catalog Moderation**: Newly listed products enter moderation queues before being published live to the public storefront catalog.
+
+---
+
+### Quickstart: Run Both Frontend and Backend
+
+From the workspace root directory:
 
 ```bash
+# 1. Install dependencies across root, server, and client
 npm install
+npm --prefix server install
+npm --prefix client install
+
+# 2. Run both Server (port 5000) and Client (port 5173) together
 npm run dev
 ```
 
-Then open <http://localhost:5173>.
+Both services will boot up concurrently:
+* **Backend API & WebSockets**: [http://localhost:5000](http://localhost:5000) (Health check: `/health`)
+* **Frontend Application**: [http://localhost:5173](http://localhost:5173)
 
-| Script | What it does |
-|---|---|
-| `npm run dev` | Dev server on port 5173 |
-| `npm run build` | Type-check, then production build to `dist/` |
-| `npm run build:static` | Same, but hash routing + relative paths — drop `dist/` on any static host, no server config |
-| `npm run preview` | Serve the production build on port 4173 |
-| `npm run check` | The gate: `typecheck` + `lint` + `check:tokens` + build |
-| `npm run check:images` | HEAD every photo URL in the image registry (needs network) |
+---
 
-## Finding your way around
+### Running Services Independently
 
-- **`/screens`** — every screen in the app, grouped by portal, with direct links to its loading / empty / error states.
-- **`/design-system`** — the live style guide: tokens, type scale, every component in every state.
-- **Demo tab**, bottom-right on every page — switch portal and persona, force a screen's loading / empty / error state, simulate latency, flip the theme, advance the courier, make a new order arrive, and reset everything back to the seed.
+You can also run each service in its own terminal or dedicated directory:
 
-Add `?chrome=0` to any URL to hide the Demo tab (useful for screenshots). Press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> in Seller Hub or Admin for the command palette.
+```bash
+# Option A: From workspace root
+npm run server:dev     # Starts Express backend on http://localhost:5000
+npm run client:dev     # Starts Vite frontend on http://localhost:5173
 
-## Personas
+# Option B: From subdirectories
+cd server && npm run dev
+cd client && npm run dev
+```
 
-You are signed in already — every route opens without a login wall, and the login screens are real forms that then sign in one of these:
+---
 
-| Persona | Portal | Why they're interesting |
-|---|---|---|
-| **Priya Nair**, Kochi 682020 | Storefront | Her order history covers every status, including the showcase order |
-| **Orbit Mobiles Hub**, Bengaluru | Seller Hub | Active seller, the default |
-| **Rangrez Threads**, Jaipur | Seller Hub | The second seller in the showcase order |
-| **Chai & Crumbs Co.** | Seller Hub | An application still waiting for approval — shows the locked-down "under review" mode |
-| **Ishaan Verma** | Admin | Super admin |
+## 🔑 Demo User Credentials
 
-## Things worth clicking
+| Role | Portal URL | Email | Password |
+|---|---|---|---|
+| **Super Administrator** | <http://localhost:5173/admin> | `admin@chowk.com` | `admin123` |
+| **Active Seller** | <http://localhost:5173/seller> | `seller1@example.com` | `seller123` |
+| **Registered Customer** | <http://localhost:5173> | `customer1@example.com` | `customer123` |
 
-1. **Shop → deliver.** Filter a category, pick a variant, check your PIN, add items from two different sellers, apply `FESTIVE20`, check out. The order splits into one shipment per seller. Switch to Seller Hub and confirm → pack → hand over; switch to Admin and watch the same order. Use the Demo tab's **Advance courier** to get it delivered, then rate it.
-2. **A payment that fails.** At checkout, pay by UPI with the VPA `fail@demo` (or a card ending `0002`). It fails inline the way a real one does, holds your items, and lets you retry or switch to Cash on Delivery. Both attempts show up in the admin payment report.
-3. **Cancel and return.** Cancel a confirmed item, or return a delivered one — the same status appears in all three portals, from the same registry.
-4. **Seller onboarding.** Register a new seller, then approve (or request changes on) the application in Admin → Sellers. The message you write is what the seller reads, word for word.
-5. **A listing going live.** Add a product in Seller Hub, approve it in Admin, find it in its category on the storefront.
-6. **Two tabs.** Open the storefront in one tab and Seller Hub in another. Place an order in the first; the second updates.
+---
 
-The showcase order is **ORD-482193** — Priya Nair, Kochi, paid by UPI with `FESTIVE20`, split across Orbit Mobiles Hub (packed) and Rangrez Threads (shipped, AWB DS1029384756). Every portal tells the same story about it.
+## 🧪 Automated Testing & Verification
 
-Demo OTP is **123456** wherever a mobile number is verified.
+The application includes an extensive suite of end-to-end and unit integration tests testing authentication, role-based authorization, inventory concurrency, multi-vendor checkout, shipment state transitions, and admin finances.
 
-## What's synthetic
+To run all automated test suites:
+```bash
+cd server
+npm test -- --runInBand
+```
 
-All of it. 103 products across 47 categories, 16 sellers, 523 shoppers, about 1,400 orders spread over the last 90 days, 320 reviews and the payouts that follow from them are generated from a fixed seed, so the numbers tie out: platform GMV equals the sum of seller GMV equals the sum of customer orders. Brands, GSTINs, PANs, IFSC codes, AWB numbers and phone numbers are format-valid and belong to nobody. Product photos are free Unsplash images, hotlinked; the registry lives in `src/data/images.ts` and swapping in local files is a one-line change.
+### Test Suite Summary:
+* `src/tests/auth.test.ts`: User registration, duplicate emails, password validation, and JWT generation.
+* `src/tests/authz.test.ts`: Cross-role privilege boundaries and IDOR isolation (Customer $\leftrightarrow$ Seller $\leftrightarrow$ Admin).
+* `src/tests/customer.test.ts`: Cart manipulation, inventory availability validation, and address management.
+* `src/tests/product.test.ts`: Product creation, moderation workflow, and atomic inventory stock controls.
+* `src/tests/checkout.test.ts`: Multi-vendor splitting, empty cart validation, transaction rollback, and card payment processing.
+* `src/tests/order.test.ts`: Shipment lifecycle state machine, transitions validation, and AWB generation.
+* `src/tests/admin.test.ts`: PostgreSQL aggregation metrics, customer blocking, KYC approvals, and settlement payouts.
+* `src/tests/e2e-flow.test.ts`: End-to-end multi-vendor lifecycle from customer registration $\to$ split checkout $\to$ status progression $\to$ financial reporting.
 
-Uploaded images are previewed in memory only. There is no real OTP, no SMS, no payment gateway.
+---
 
-## How it's built
+## 🛠 Production Build
 
-Vite · React 19 · TypeScript · Tailwind CSS v4 · Radix primitives · Recharts · Zustand · react-hook-form + Zod · React Router.
+To compile and verify the frontend production bundle:
+```bash
+npm run build
+```
+Generates an optimized client build in `dist/` verified with zero TypeScript and bundler errors.
 
-- **`DESIGN.md`** — the visual direction and the rules that keep the three portals consistent.
-- **`CONTRACTS.md`** — how the code is organised: data access, page anatomy, styling and React rules.
-- **`docs/ux-spec.md`** — the per-screen specification, including the microcopy and accessibility checklist.
-- **`PRODUCT.md`** — who this is for and what it claims.
+---
 
-Colour, type, spacing, radii and elevation are CSS custom properties in `src/styles/tokens.css`, exposed to Tailwind through `@theme`. The default Tailwind palette is deleted, so an off-system colour cannot compile; `npm run check:tokens` catches the rest. Dark mode follows the OS and can be overridden per visitor.
+## 📖 API Documentation
 
-Data flows one way: pages read through `@/data` hooks and change things only through `dbActions`, which append timeline events, notifications and audit entries — which is why one action shows up correctly in all three portals.
+Complete OpenAPI 3.0 specification is available at:
+```text
+server/src/docs/openapi.json
+```
+Compatible with Swagger UI, Postman, and Redoc.
